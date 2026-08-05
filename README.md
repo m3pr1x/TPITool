@@ -124,6 +124,15 @@ persistance entre deux sessions, recalcul des charges après déplacement manuel
 l'ampleur du sujet : sur ce même projet, 10 conteneurs en lot unique contre 25 en respectant
 les 19 expéditions inscrites dans le document.
 
+## En ligne
+
+L'instance de démonstration tourne sur <https://tpitool.onrender.com> (protégée par mot
+de passe, offre gratuite : le service s'endort après 15 minutes sans visite et met une
+trentaine de secondes à se réveiller).
+
+`/sante` répond sans authentification — c'est le contrôle de santé de l'hébergeur, et il
+ne renvoie aucune donnée métier.
+
 ## Mettre l'outil en ligne
 
 L'application a un **backend Python** : elle lit des `.xls`, `.xlsx` et des PDF, et fait
@@ -140,6 +149,10 @@ du Python. Le dépôt contient déjà tout le nécessaire.
 4. Le mot de passe d'accès est généré automatiquement : onglet **Environment** du service,
    variable `TPITOOL_MDP`. Le navigateur le demandera à l'ouverture (identifiant : ce que
    tu veux, mot de passe : cette valeur).
+
+> Le `healthCheckPath` doit pointer sur `/sante`, laissé hors authentification. S'il vise
+> une route protégée, l'hébergeur reçoit un 401, conclut que le service est en panne, et le
+> déploiement reste bloqué alors que l'application répond parfaitement.
 
 Sur l'offre gratuite le service s'endort après 15 minutes sans visite ; la première
 ouverture suivante prend une trentaine de secondes. Pour un lien de démonstration c'est
