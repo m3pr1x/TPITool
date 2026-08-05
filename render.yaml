@@ -10,7 +10,7 @@ services:
     # Render fournit $PORT (10000 par défaut) ; la valeur de repli permet de
     # lancer la même commande ailleurs sans rien changer.
     startCommand: uvicorn app:app --host 0.0.0.0 --port ${PORT:-10000}
-    healthCheckPath: /api/unites
+    healthCheckPath: /sante          # non protégé : sinon le 401 fait échouer le déploiement
     envVars:
       - key: PYTHON_VERSION
         value: "3.12.6"

@@ -46,11 +46,16 @@ def _purger_sessions():
         SESSIONS.pop(min(SESSIONS, key=lambda k: SESSIONS[k]["t"]), None)
 
 
+# Le contrôle de santé de l'hébergeur doit rester joignable sans mot de passe :
+# sinon il reçoit un 401, juge le service en panne, et le déploiement n'aboutit jamais.
+LIBRE = {"/sante"}
+
+
 @app.middleware("http")
 async def protection(request: Request, call_next):
     """Mot de passe facultatif — indispensable dès que l'app est exposée sur Internet,
     puisque n'importe qui pourrait sinon y déposer des fichiers."""
-    if MDP:
+    if MDP and request.url.path not in LIBRE:
         entete = request.headers.get("authorization", "")
         ok = False
         if entete.startswith("Basic "):
@@ -97,6 +102,13 @@ class Plan(BaseModel):
 def accueil():
     with open(os.path.join(ICI, "static", "index.html"), encoding="utf-8") as f:
         return f.read()
+
+
+@app.get("/sante")
+def sante():
+    """Contrôle de santé de l'hébergeur. Volontairement hors authentification et
+    sans donnée métier : il ne dit que « le processus répond »."""
+    return {"ok": True, "sessions": len(SESSIONS)}
 
 
 @app.get("/api/unites")
