@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Packing lists réelles : elles contiennent des noms, adresses, téléphones et
+# courriels de personnes, ainsi que des données commerciales. Elles n'ont rien
+# à faire dans un dépôt public.
+donnees-exemples/
+*.xls
+*.xlsx
+*.pdf
+!exemples/packing-list-exemple.xlsx

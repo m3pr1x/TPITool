@@ -1,0 +1,937 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plan de chargement & d'empotage</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230E6072'/%3E%3Cpath d='M6 12h20v12H6z' fill='none' stroke='white' stroke-width='2'/%3E%3Cpath d='M11 12v12M16 12v12M21 12v12' stroke='white' stroke-width='1.4' opacity='.75'/%3E%3C/svg%3E">
+<style>
+:root{
+  color-scheme: light;                     /* l'app reste claire même si le Mac est en sombre */
+  --bg:#F2F5F6; --card:#FFFFFF; --sunk:#F7F9FA; --hover:#EFF4F5;
+  --ink:#10242B; --ink-2:#47606A; --ink-3:#7C949C;
+  --line:#E2E9EB; --line-2:#EFF3F4; --line-strong:#CBD8DB;
+  --accent:#0E6072; --accent-2:#12798F; --accent-soft:#E4F0F3; --accent-ink:#0A4C5B;
+  --good:#2C7A57; --good-soft:#E4F2EB;
+  --warn:#A5680B; --warn-soft:#FBEFD9;
+  --bad:#AE3A26;  --bad-soft:#FBE7E2;
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+  --ui:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI","Helvetica Neue",Arial,sans-serif;
+  --sh-1:0 1px 2px rgba(16,36,43,.05), 0 1px 1px rgba(16,36,43,.03);
+  --sh-2:0 1px 2px rgba(16,36,43,.05), 0 10px 26px -14px rgba(16,36,43,.24);
+  --r:10px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:400 15px/1.55 var(--ui);
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* ─────────── en-tête ─────────── */
+header.top{position:sticky;top:0;z-index:60;background:rgba(242,245,246,.86);
+  backdrop-filter:saturate(180%) blur(12px);border-bottom:1px solid var(--line)}
+header.top .in{max-width:1560px;margin:0 auto;padding:0 24px;height:60px;display:flex;align-items:center;gap:26px}
+.brand{display:flex;align-items:center;gap:10px;white-space:nowrap}
+.brand .logo{width:28px;height:28px;border-radius:7px;background:var(--accent);flex:none;
+  display:grid;place-items:center}
+.brand .logo svg{width:18px;height:18px}
+.brand b{font-size:15.5px;font-weight:650;letter-spacing:-.015em;display:block;line-height:1.15}
+.brand small{font:400 10px/1.2 var(--mono);letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3)}
+
+.stepper{display:flex;align-items:center;gap:0;margin-left:auto;min-width:0;overflow-x:auto;scrollbar-width:none}
+.stepper::-webkit-scrollbar{display:none}
+.stepper button{display:flex;align-items:center;gap:8px;background:none;border:0;cursor:pointer;
+  padding:7px 12px;border-radius:8px;font:500 13px/1 var(--ui);color:var(--ink-3);white-space:nowrap}
+.stepper button i{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;flex:none;
+  font:600 11px/1 var(--mono);background:var(--line-2);color:var(--ink-3);font-style:normal}
+.stepper button:hover:not(:disabled){background:var(--hover);color:var(--ink)}
+.stepper button[aria-current=true]{color:var(--accent-ink);background:var(--accent-soft)}
+.stepper button[aria-current=true] i{background:var(--accent);color:#fff}
+.stepper button.fait i{background:var(--good-soft);color:var(--good)}
+.stepper button:disabled{opacity:.42;cursor:not-allowed}
+.stepper .sep{width:16px;height:1px;background:var(--line-strong);flex:none}
+.fichier{font:400 12px/1 var(--mono);color:var(--ink-3);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;max-width:210px;padding-left:6px;border-left:1px solid var(--line)}
+
+main{max-width:1560px;margin:0 auto;padding:30px 24px 100px}
+section[hidden]{display:none}
+h1{font-size:27px;font-weight:650;letter-spacing:-.028em;margin:0 0 8px}
+h2{font-size:17px;font-weight:650;letter-spacing:-.02em;margin:30px 0 12px}
+.sub{color:var(--ink-2);margin:0 0 24px;max-width:78ch;font-size:15.5px}
+.k{font:500 10.5px/1.3 var(--mono);letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);
+  margin:0 0 10px;display:block}
+
+/* ─────────── éléments ─────────── */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+  box-shadow:var(--sh-1);padding:20px 22px;margin:0 0 20px}
+.card>:last-child{margin-bottom:0}
+.row{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end}
+.f{display:flex;flex-direction:column;gap:6px}
+.f>span{font:500 10.5px/1.2 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+select,input[type=text],input[type=number]{font:400 13.5px/1.2 var(--ui);padding:8px 10px;
+  background:var(--card);color:var(--ink);border:1px solid var(--line-strong);border-radius:7px;min-width:80px;
+  transition:border-color .12s, box-shadow .12s}
+select:focus,input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+input[type=number]{font-family:var(--mono);font-variant-numeric:tabular-nums}
+label.chk{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-2);cursor:pointer}
+input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px}
+button.act{font:600 13.5px/1 var(--ui);padding:11px 18px;border:1px solid var(--accent);
+  background:var(--accent);color:#fff;border-radius:8px;cursor:pointer;box-shadow:var(--sh-1);
+  transition:background .12s, transform .06s}
+button.act:hover{background:var(--accent-2)}
+button.act:active{transform:translateY(1px)}
+button.act:disabled{opacity:.45;cursor:not-allowed}
+button.ghost{font:500 12.5px/1 var(--ui);padding:8px 13px;border:1px solid var(--line-strong);
+  background:var(--card);color:var(--ink-2);border-radius:7px;cursor:pointer;transition:all .12s}
+button.ghost:hover{background:var(--hover);color:var(--ink);border-color:var(--ink-3)}
+button.ghost[aria-pressed=true]{border-color:var(--accent);color:var(--accent-ink);background:var(--accent-soft)}
+.seg{display:inline-flex;background:var(--sunk);border:1px solid var(--line);border-radius:8px;padding:3px;gap:2px}
+.seg button{font:500 12.5px/1 var(--ui);padding:6px 11px;border:0;background:none;color:var(--ink-3);
+  border-radius:6px;cursor:pointer}
+.seg button:hover{color:var(--ink)}
+.seg button[aria-pressed=true]{background:var(--card);color:var(--accent-ink);box-shadow:var(--sh-1)}
+
+/* ─────────── dépôt ─────────── */
+.drop{border:2px dashed var(--line-strong);border-radius:14px;padding:62px 24px;text-align:center;
+  background:var(--card);cursor:pointer;transition:all .15s}
+.drop:hover{border-color:var(--accent);background:var(--accent-soft)}
+.drop.on{border-color:var(--accent);background:var(--accent-soft);transform:scale(1.005)}
+.drop svg{width:38px;height:38px;color:var(--accent);margin-bottom:12px}
+.drop b{display:block;font-size:19px;font-weight:600;letter-spacing:-.02em;margin-bottom:6px}
+.drop span{color:var(--ink-3);font-size:13.5px}
+
+/* ─────────── tableaux ─────────── */
+.scroll{overflow:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--card);
+  box-shadow:var(--sh-1);max-height:64vh}
+table{border-collapse:separate;border-spacing:0;width:100%;font-size:13.5px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line-2);white-space:nowrap}
+thead th{position:sticky;top:0;z-index:2;background:var(--sunk);
+  font:500 10px/1.3 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);
+  border-bottom:1px solid var(--line)}
+tbody tr:last-child td{border-bottom:0}
+td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+tbody tr:hover{background:var(--hover)}
+tbody tr.sel{background:var(--accent-soft)}
+tbody tr.actif{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+td.wrap,th.wrap{white-space:normal;min-width:210px;max-width:360px}
+td input,td select{padding:5px 7px;font-size:12.5px;min-width:0;width:100%;border-radius:6px}
+td select[data-f=status],td select[data-f=stackable]{min-width:112px}
+td input[type=number]{width:78px}
+.grille td{font-family:var(--mono);font-size:11.5px;max-width:160px;overflow:hidden;
+  text-overflow:ellipsis;color:var(--ink-2)}
+.grille tr.entete td{background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.grille td.idx{background:var(--sunk);color:var(--ink-3);text-align:right;position:sticky;left:0}
+
+/* ─────────── pastilles ─────────── */
+.tag{display:inline-flex;align-items:center;gap:5px;font:500 10.5px/1.5 var(--mono);letter-spacing:.05em;
+  text-transform:uppercase;padding:2px 8px;border-radius:20px}
+.t-ok{color:var(--good);background:var(--good-soft)}
+.t-lim{color:var(--warn);background:var(--warn-soft)}
+.t-hg{color:var(--bad);background:var(--bad-soft)}
+.t-info{color:var(--accent-ink);background:var(--accent-soft)}
+.al{font:400 11.5px/1.45 var(--ui);display:block}
+.al.err{color:var(--bad)} .al.warn{color:var(--warn)}
+
+/* ─────────── indicateurs ─────────── */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:12px;margin:0 0 20px}
+.stats>div{background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+  padding:13px 16px;box-shadow:var(--sh-1)}
+.stats dt{font:500 10px/1.3 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin:0 0 5px}
+.stats dd{margin:0;font-size:23px;font-weight:650;letter-spacing:-.025em;font-variant-numeric:tabular-nums}
+.stats dd small{font-size:12px;font-weight:400;color:var(--ink-3);letter-spacing:0}
+.stats dd.bad{color:var(--bad)} .stats dd.warn{color:var(--warn)} .stats dd.good{color:var(--good)}
+
+.meter{display:flex;align-items:center;gap:9px;min-width:132px}
+.meter .tr{flex:1;height:6px;background:var(--line-2);border-radius:20px;overflow:hidden}
+.meter .fl{display:block;height:100%;background:var(--accent);border-radius:20px}
+.meter .v{font-family:var(--mono);font-size:12px;font-variant-numeric:tabular-nums;min-width:44px;text-align:right}
+
+/* ─────────── plan ─────────── */
+.split{display:grid;grid-template-columns:minmax(270px,320px) 1fr;gap:20px;align-items:start}
+@media(max-width:1080px){.split{grid-template-columns:1fr}}
+.ulist{border:1px solid var(--line);border-radius:var(--r);background:var(--card);overflow:auto;
+  max-height:calc(72vh);box-shadow:var(--sh-1)}
+.ulist button{display:block;width:100%;text-align:left;padding:13px 15px;border:0;
+  border-bottom:1px solid var(--line-2);background:none;color:var(--ink);cursor:pointer;font:inherit}
+.ulist button:last-child{border-bottom:0}
+.ulist button:hover{background:var(--hover)}
+.ulist button[aria-current=true]{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+.ulist .l1{display:flex;justify-content:space-between;gap:10px;font-weight:600;font-size:13.5px;letter-spacing:-.01em}
+.ulist .l2{font:400 11.5px/1.6 var(--mono);color:var(--ink-3)}
+
+.vue{border:1px solid var(--line);border-radius:var(--r);background:var(--card);
+  box-shadow:var(--sh-2);overflow:hidden}
+.vtools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:11px 14px;
+  border-bottom:1px solid var(--line);background:var(--sunk)}
+.scene{position:relative;height:min(64vh,640px);
+  background:linear-gradient(180deg,#FBFDFD 0%,#EDF3F4 58%,#E2EBED 100%)}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+#tip{position:fixed;pointer-events:none;opacity:0;transition:opacity .1s;background:var(--ink);color:#fff;
+  font:400 12px/1.5 var(--ui);padding:8px 11px;border-radius:8px;max-width:290px;z-index:80;box-shadow:var(--sh-2)}
+.vfoot{display:flex;flex-wrap:wrap;gap:16px;align-items:center;padding:11px 15px;border-top:1px solid var(--line);
+  font:400 12.5px/1 var(--ui);color:var(--ink-2)}
+.vfoot b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+input[type=range]{accent-color:var(--accent);flex:1;min-width:110px}
+.aide{font:400 11.5px/1.5 var(--ui);color:var(--ink-3)}
+.aide kbd{font:500 10.5px/1 var(--mono);background:var(--sunk);border:1px solid var(--line-strong);
+  border-bottom-width:2px;border-radius:4px;padding:2px 5px;color:var(--ink-2)}
+
+.selpan{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:12px 15px;
+  border-top:1px solid var(--line);background:var(--accent-soft)}
+.selpan[hidden]{display:none}
+.selpan .nom{font-weight:600;font-size:13.5px}
+.selpan .det{font:400 12px/1.5 var(--mono);color:var(--ink-2)}
+
+.notice{border-radius:9px;padding:11px 15px;margin:0 0 16px;font-size:14px;
+  background:var(--accent-soft);color:var(--accent-ink);border:1px solid transparent}
+.notice.bad{background:var(--bad-soft);color:var(--bad)}
+.notice.warn{background:var(--warn-soft);color:var(--warn)}
+.notice.good{background:var(--good-soft);color:var(--good)}
+.notice b{font-weight:650}
+
+.bulk{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:13px 16px;margin:0 0 14px;
+  background:var(--accent-soft);border:1px solid var(--accent);border-radius:var(--r);font-size:13.5px;
+  color:var(--accent-ink)}
+.bulk[hidden]{display:none}
+.bulk select,.bulk input{background:var(--card)}
+
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(8px);z-index:200;
+  background:var(--ink);color:#fff;padding:12px 20px;border-radius:9px;font-size:13.5px;font-weight:500;
+  opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;max-width:80vw;box-shadow:var(--sh-2)}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid currentColor;border-right-color:transparent;
+  border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:5px}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="in">
+    <div class="brand">
+      <span class="logo"><svg viewBox="0 0 32 32" fill="none" stroke="#fff" stroke-width="2.2">
+        <path d="M6 12h20v12H6z"/><path d="M11 12v12M16 12v12M21 12v12" stroke-width="1.4" opacity=".7"/></svg></span>
+      <span><b>Plan de chargement</b><small>colisage → empotage</small></span>
+    </div>
+    <nav class="stepper" id="stepper">
+      <button type="button" data-e="1" aria-current="true"><i>1</i>Import</button><span class="sep"></span>
+      <button type="button" data-e="2" disabled><i>2</i>Colonnes</button><span class="sep"></span>
+      <button type="button" data-e="3" disabled><i>3</i>Vérification</button><span class="sep"></span>
+      <button type="button" data-e="4" disabled><i>4</i>Plan 3D</button>
+    </nav>
+    <span class="fichier" id="fActif"></span>
+  </div>
+</header>
+
+<main>
+
+<!-- ═════════ 1 · IMPORT ═════════ -->
+<section id="e1">
+  <h1>Importer une packing list</h1>
+  <p class="sub">Excel (.xls, .xlsx), PDF ou CSV. Le fichier ne quitte pas cette machine : tout est lu
+  et calculé en local. Rien ne part à l'algorithme avant ta validation à l'étape 3.</p>
+
+  <div class="drop" id="drop" tabindex="0" role="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5-5 5 5"/><path d="M12 5v13"/></svg>
+    <b>Dépose un fichier ici</b>
+    <span>ou clique pour le choisir — .xls · .xlsx · .pdf · .csv</span>
+    <input type="file" id="file" accept=".xls,.xlsx,.xlsm,.pdf,.csv,.txt" hidden>
+  </div>
+  <p style="margin:14px 0 0;color:var(--ink-3);font-size:13.5px">
+    Pas de fichier sous la main ?
+    <a href="#" id="lienExemple" style="color:var(--accent);font-weight:600">Essayer avec une packing list d'exemple</a>
+    — 22 colis fictifs, dont deux hors gabarit.
+  </p>
+  <p id="impErr" class="notice bad" hidden style="margin-top:14px"></p>
+
+  <h2>Le parcours</h2>
+  <div class="card">
+    <ol style="margin:0;padding-left:22px;color:var(--ink-2);line-height:1.7">
+      <li><b>Colonnes</b> — l'outil propose une ligne d'en-tête et une correspondance de colonnes, tu
+      corriges si besoin. Il n'y a pas deux packing lists identiques, même sorties du même modèle.</li>
+      <li><b>Vérification</b> — la liste est contrôlée automatiquement, et tu <b>saisis la
+      gerbabilité</b>, que les packing lists ne contiennent presque jamais.</li>
+      <li><b>Plan 3D</b> — placement automatique, puis réagencement à la souris si tu veux reprendre
+      la main sur une caisse.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ═════════ 2 · COLONNES ═════════ -->
+<section id="e2" hidden>
+  <h1>Vérifier la lecture du fichier</h1>
+  <p class="sub">Les cellules surlignées correspondent à la ligne d'en-tête retenue. Contrôle que chaque
+  colonne utile est bien affectée, puis lance la lecture.</p>
+
+  <div class="card">
+    <div class="row">
+      <label class="f"><span>Feuille / page</span><select id="mSheet"></select></label>
+      <label class="f"><span>Ligne d'en-tête</span><input type="number" id="mEntete" min="0" step="1" style="width:92px"></label>
+      <label class="f"><span>Unité des cotes</span>
+        <select id="mUnite"><option value="cm">centimètres</option><option value="mm">millimètres</option>
+          <option value="m">mètres</option><option value="in">pouces</option></select></label>
+      <label class="f"><span>Gerbabilité par défaut</span>
+        <select id="mGerb"><option value="no">non gerbable (prudent)</option>
+          <option value="same">gerbable sur identique</option><option value="yes">gerbable</option></select></label>
+      <label class="chk" style="padding-bottom:9px"><input type="checkbox" id="mRegroup" checked>
+        Rattacher les lignes sans cote au colis précédent</label>
+      <button class="act" id="btnParser">Lire le fichier</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="k">Affectation des colonnes</span>
+    <div class="row" id="mChamps"></div>
+  </div>
+
+  <span class="k">Aperçu brut — 60 premières lignes</span>
+  <div class="scroll"><table class="grille"><tbody id="mGrid"></tbody></table></div>
+  <p id="parseErr" class="notice bad" hidden style="margin-top:16px"></p>
+</section>
+
+<!-- ═════════ 3 · VÉRIFICATION ═════════ -->
+<section id="e3" hidden>
+  <h1>Vérifier et compléter</h1>
+  <p class="sub">C'est l'étape qui décide de tout. Les colonnes éditables sont directement modifiables —
+  la gerbabilité et la charge admissible ne figurent dans aucun de ces documents, c'est à l'équipe de
+  les renseigner.</p>
+
+  <dl class="stats" id="vStats"></dl>
+  <div id="vRecon"></div>
+
+  <div class="card">
+    <div class="row">
+      <div class="f"><span>Filtrer</span>
+        <div class="seg" id="filtres">
+          <button data-fil="tout" aria-pressed="true">Tout</button>
+          <button data-fil="err">Erreurs</button>
+          <button data-fil="warn">Avertissements</button>
+          <button data-fil="hg">Hors gabarit</button>
+          <button data-fil="lim">Limites</button>
+          <button data-fil="nogerb">Gerbage à saisir</button>
+        </div>
+      </div>
+      <label class="f"><span>Recherche</span><input type="text" id="vRech" placeholder="réf. ou désignation" style="min-width:200px"></label>
+      <label class="f"><span>Référence gabarit</span><select id="vUnite"></select></label>
+    </div>
+  </div>
+
+  <div class="bulk" id="vBulk" hidden>
+    <b><span id="vNsel">0</span> colis sélectionnés</b>
+    <label class="chk">Gerbable
+      <select id="bGerb"><option value="">—</option><option value="no">non</option>
+        <option value="same">sur identique</option><option value="yes">oui</option></select></label>
+    <label class="chk">Charge max (kg) <input type="number" id="bLoad" min="0" step="100" style="width:96px"></label>
+    <label class="chk">Rotation
+      <select id="bRot"><option value="">—</option><option value="1">autorisée</option><option value="0">interdite</option></select></label>
+    <label class="chk">Statut
+      <select id="bStat"><option value="">—</option><option value="confirmed">confirmé</option><option value="estimated">estimé</option></select></label>
+    <button class="act" id="bAppliquer" style="padding:8px 14px;font-size:12.5px">Appliquer</button>
+    <button class="ghost" id="bVider">Désélectionner</button>
+  </div>
+
+  <div class="scroll">
+    <table><thead><tr>
+      <th style="width:30px"><input type="checkbox" id="vAll" aria-label="Tout sélectionner"></th>
+      <th>Réf.</th><th class="wrap">Désignation</th>
+      <th class="n">Long.</th><th class="n">Larg.</th><th class="n">Haut.</th>
+      <th class="n">Brut kg</th><th class="n">m³</th>
+      <th>Gerbable</th><th class="n">Charge max</th><th>Rot.</th><th>Au sol</th>
+      <th>Statut</th><th>Gabarit</th><th class="wrap">Contrôles</th>
+    </tr></thead><tbody id="vBody"></tbody></table>
+  </div>
+
+  <div class="row" style="margin-top:18px">
+    <button class="act" id="btnPlan">Calculer le plan</button>
+    <button class="ghost" id="btnExpColis">Exporter la liste vérifiée (CSV)</button>
+    <span id="vBlocage" style="font-size:13px;color:var(--bad)"></span>
+  </div>
+</section>
+
+<!-- ═════════ 4 · PLAN ═════════ -->
+<section id="e4" hidden>
+  <h1>Plan de chargement</h1>
+
+  <div class="card">
+    <div class="row">
+      <div class="f"><span>Unités autorisées</span><div id="pUnites" style="display:flex;gap:6px;flex-wrap:wrap"></div></div>
+    </div>
+    <div class="row" style="margin-top:16px">
+      <label class="f"><span>Plafond remplissage %</span><input type="number" id="pPlafond" value="85" min="30" max="100" step="1" style="width:88px"></label>
+      <label class="f"><span>Marge de calage cm</span><input type="number" id="pCalage" value="0" min="0" max="30" step="1" style="width:88px"></label>
+      <label class="f"><span>Bande « limite » cm</span><input type="number" id="pLimite" value="10" min="0" max="50" step="1" style="width:88px"></label>
+      <label class="f"><span>Regrouper par</span>
+        <select id="pGroupe"><option value="">un seul lot (optimum théorique)</option>
+          <option value="group">n° d'expédition</option><option value="supplier">fournisseur</option></select></label>
+      <label class="chk" style="padding-bottom:9px"><input type="checkbox" id="pOpt" checked>Choisir l'unité la plus petite possible</label>
+      <button class="act" id="btnRecalc">Recalculer</button>
+    </div>
+  </div>
+
+  <dl class="stats" id="pStats"></dl>
+  <div id="pNotes"></div>
+
+  <div class="split">
+    <div>
+      <span class="k">Unités de transport</span>
+      <div class="ulist" id="pList"></div>
+      <div class="row" style="margin-top:14px">
+        <button class="ghost" id="btnExpPlan">Exporter le plan (CSV)</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="vue">
+        <div class="vtools">
+          <div class="seg" id="vues">
+            <button data-v="troisquart" aria-pressed="true">3/4</button>
+            <button data-v="dessus">Dessus</button>
+            <button data-v="cote">Côté</button>
+            <button data-v="arriere">Portes</button>
+          </div>
+          <button class="ghost" id="btnCadrer">Recadrer</button>
+          <label class="chk" style="margin-left:6px"><input type="checkbox" id="chkEdit">
+            <b style="font-weight:600">Mode édition</b></label>
+          <span class="aide" id="aideEdit" hidden>Clique une caisse, glisse pour la déplacer ·
+            <kbd>←↑→↓</kbd> 1 cm · <kbd>⇧</kbd> 10 cm · <kbd>R</kbd> pivoter · <kbd>Esc</kbd> désélectionner</span>
+          <button class="ghost" id="btnReset" style="margin-left:auto" hidden>Annuler mes déplacements</button>
+        </div>
+        <div class="scene"><canvas id="cv"></canvas></div>
+        <div class="selpan" id="selPan" hidden>
+          <span class="nom" id="selNom"></span>
+          <span class="det" id="selDet"></span>
+          <button class="ghost" id="btnPivoter">Pivoter 90°</button>
+          <span class="det" id="selEtat" style="margin-left:auto"></span>
+        </div>
+        <div class="vfoot">
+          <span id="vf1"></span><span id="vf2"></span>
+          <input type="range" id="vfR" min="1" max="1" value="1" aria-label="Colis affichés">
+          <span id="vf3"></span>
+        </div>
+      </div>
+
+      <span class="k" style="margin-top:22px">Détail de l'unité</span>
+      <div class="scroll" style="max-height:32vh">
+        <table><thead><tr>
+          <th class="n">#</th><th>Réf.</th><th class="wrap">Désignation</th>
+          <th class="n">L×l×h</th><th class="n">Position x,y,z</th><th class="n">kg</th><th class="n">Charge dessus</th>
+        </tr></thead><tbody id="pDetail"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <h2 id="hgTitre" hidden>Colis hors gabarit</h2>
+  <div class="scroll" id="hgWrap" hidden style="max-height:none">
+    <table><thead><tr>
+      <th>Réf.</th><th class="wrap">Désignation</th><th class="n">L×l×h</th><th class="n">kg</th>
+      <th class="n">m³</th><th class="wrap">Motif</th><th>Solution proposée</th>
+    </tr></thead><tbody id="hgBody"></tbody></table>
+  </div>
+</section>
+
+</main>
+
+<div id="toast"></div>
+<div id="tip"></div>
+
+<script type="module">
+import { creerViewer } from "./static/viewer.js";
+
+/* ═══════════ état ═══════════ */
+const S = { session:null, feuilles:[], sheet:0, colis:[], alertes:{}, bilan:{},
+            unites:[], champs:[], gabarit:{}, plan:null, sel:new Set(), filtre:"tout",
+            uActive:0, uniteRef:"40HC", unitesPlan:["40HC"], modifie:false, planOrigine:null };
+
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s??"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const nf = (n,d=0) => (n==null||isNaN(n)) ? "—" : Number(n).toLocaleString("fr-FR",{minimumFractionDigits:d,maximumFractionDigits:d});
+
+function toast(msg, ms=2600){ const t=$("#toast"); t.textContent=msg; t.classList.add("on");
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("on"), ms); }
+
+function etape(n){
+  [1,2,3,4].forEach(i=>$("#e"+i).hidden = (i!==n));
+  $$("#stepper button").forEach(b=>{
+    const e=+b.dataset.e;
+    b.setAttribute("aria-current", e===n);
+    b.classList.toggle("fait", e<n && !b.disabled);
+  });
+  window.scrollTo({top:0,behavior:"instant"});
+  if(n===4) setTimeout(()=>viewer && viewer.rendu(), 30);
+}
+function debloquer(n){ $$("#stepper button").forEach(b=>{ if(+b.dataset.e<=n) b.disabled=false; }); }
+$("#stepper").addEventListener("click",e=>{ const b=e.target.closest("button");
+  if(b && !b.disabled) etape(+b.dataset.e); });
+
+async function api(url, body, isFile){
+  const opt = isFile ? {method:"POST", body}
+    : {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)};
+  const r = await fetch(url, opt);
+  if(!r.ok){ let m; try{ m=(await r.json()).detail }catch{ m=r.statusText } throw new Error(m||"erreur serveur"); }
+  return r.json();
+}
+
+/* ═══════════ 1 · import ═══════════ */
+const drop=$("#drop"), fileInput=$("#file");
+const dropHTML = drop.innerHTML;
+drop.onclick = ()=>fileInput.click();
+drop.onkeydown = e=>{ if(e.key==="Enter"||e.key===" "){e.preventDefault();fileInput.click();} };
+["dragenter","dragover"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("on")}));
+["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("on")}));
+drop.addEventListener("drop",e=>{ if(e.dataTransfer.files[0]) envoyer(e.dataTransfer.files[0]); });
+fileInput.onchange = ()=>{ if(fileInput.files[0]) envoyer(fileInput.files[0]); };
+$("#lienExemple").onclick = async e=>{
+  e.preventDefault();
+  try{
+    const r = await fetch("/exemples/packing-list-exemple.xlsx");
+    if(!r.ok) throw new Error("exemple introuvable");
+    await envoyer(new File([await r.blob()], "packing-list-exemple.xlsx"));
+  }catch(err){ toast("Exemple indisponible : "+err.message, 4000); }
+};
+
+window.envoyer = async function(f){
+  $("#impErr").hidden = true;
+  drop.innerHTML = '<b><span class="spin"></span>Lecture de '+esc(f.name)+'…</b><span>analyse de la structure du document</span>';
+  const fd = new FormData(); fd.append("fichier", f);
+  try{
+    const d = await api("/api/import", fd, true);
+    S.session=d.session; S.feuilles=d.feuilles; S.sheet=d.feuille_defaut;
+    $("#fActif").textContent = d.nom;
+    remplirMapping(); debloquer(2); etape(2);
+    toast(d.feuilles.length>1 ? d.feuilles.length+" feuilles trouvées" : "Fichier lu");
+  }catch(err){ $("#impErr").textContent = "Lecture impossible : "+err.message; $("#impErr").hidden=false; }
+  drop.innerHTML = dropHTML; fileInput.value="";
+};
+
+/* ═══════════ 2 · colonnes ═══════════ */
+function remplirMapping(){
+  const sel=$("#mSheet"); sel.innerHTML="";
+  S.feuilles.forEach((f,i)=>{ const o=document.createElement("option");
+    o.value=i; o.textContent=`${f.nom} — ${f.lignes} lignes × ${f.colonnes} col.`; sel.appendChild(o); });
+  sel.value=S.sheet;
+  sel.onchange=()=>{ S.sheet=+sel.value; chargerFeuille(); };
+  chargerFeuille();
+}
+function chargerFeuille(){
+  const f=S.feuilles[S.sheet];
+  $("#mEntete").value=f.entete_propose; $("#mUnite").value=f.unite_proposee;
+  const wrap=$("#mChamps"); wrap.innerHTML="";
+  S.champs.forEach(([cle,lib])=>{
+    const l=document.createElement("label"); l.className="f";
+    const s=document.createElement("select"); s.dataset.champ=cle;
+    s.innerHTML='<option value="">— non utilisé —</option>';
+    for(let c=0;c<f.colonnes;c++){
+      const ent=(f.apercu[f.entete_propose]||[])[c] || "";
+      const o=document.createElement("option"); o.value=c;
+      o.textContent = `col ${c+1}${ent? " · "+ent.slice(0,24):""}`; s.appendChild(o);
+    }
+    if(f.mapping_propose[cle]!=null) s.value=f.mapping_propose[cle];
+    l.innerHTML=`<span>${lib}${["length","width","height"].includes(cle)?" *":""}</span>`;
+    l.appendChild(s); wrap.appendChild(l);
+  });
+  $("#mEntete").oninput=dessinerGrille;
+  dessinerGrille();
+}
+function dessinerGrille(){
+  const f=S.feuilles[S.sheet], ent=+$("#mEntete").value, tb=$("#mGrid"); tb.innerHTML="";
+  f.apercu.forEach((ligne,r)=>{
+    const tr=document.createElement("tr"); if(r===ent) tr.className="entete";
+    const td=document.createElement("td"); td.className="idx"; td.textContent=r; tr.appendChild(td);
+    for(let c=0;c<Math.min(f.colonnes,40);c++){
+      const d=document.createElement("td"); d.textContent=(ligne[c]||"").slice(0,60); tr.appendChild(d);
+    }
+    tb.appendChild(tr);
+  });
+}
+$("#btnParser").onclick = async ()=>{
+  const mapping={};
+  $$("#mChamps select").forEach(s=>{ if(s.value!=="") mapping[s.dataset.champ]=+s.value; });
+  $("#parseErr").hidden=true;
+  const btn=$("#btnParser"); btn.disabled=true; btn.innerHTML='<span class="spin"></span>Lecture…';
+  try{
+    const d = await api("/api/parser", {session:S.session, sheet:S.sheet, entete:+$("#mEntete").value,
+      mapping, unite:$("#mUnite").value, regrouper:$("#mRegroup").checked, defaut_gerbable:$("#mGerb").value});
+    S.colis=d.colis; S.alertes=d.alertes; S.bilan=d.bilan; S.sel.clear();
+    await reclasser(); dessinerVerif(); debloquer(3); etape(3);
+    toast(S.colis.length+" colis lus"+(d.bilan.lignes_rattachees? " · "+d.bilan.lignes_rattachees+" lignes rattachées":""));
+  }catch(err){ $("#parseErr").textContent=err.message; $("#parseErr").hidden=false; }
+  btn.disabled=false; btn.textContent="Lire le fichier";
+};
+
+/* ═══════════ 3 · vérification ═══════════ */
+async function reclasser(){
+  const d = await api("/api/verifier", {colis:S.colis, unites:[S.uniteRef],
+    clearance:+($("#pCalage")?.value||0), limite_cm:+($("#pLimite")?.value||10)});
+  S.gabarit = d.gabarit;
+}
+function dessinerVerif(){
+  const b=S.bilan, nogerb=S.colis.filter(c=>c.stackable==="no").length;
+  const hg=Object.values(S.gabarit).filter(g=>g.verdict==="hors_gabarit").length;
+  const lim=Object.values(S.gabarit).filter(g=>g.verdict==="limite").length;
+  $("#vStats").innerHTML = `
+    <div><dt>Colis</dt><dd>${nf(b.colis)}</dd></div>
+    <div><dt>Volume</dt><dd>${nf(b.volume,1)} <small>m³</small></dd></div>
+    <div><dt>Poids brut</dt><dd>${nf(b.brut)} <small>kg</small></dd></div>
+    <div><dt>Erreurs</dt><dd class="${b.erreurs?'bad':'good'}">${nf(b.erreurs)}</dd></div>
+    <div><dt>Avertissements</dt><dd class="${b.avertissements?'warn':'good'}">${nf(b.avertissements)}</dd></div>
+    <div><dt>Hors gabarit</dt><dd class="${hg?'bad':'good'}">${nf(hg)}</dd></div>
+    <div><dt>Limites</dt><dd class="${lim?'warn':''}">${nf(lim)}</dd></div>
+    <div><dt>Gerbage non saisi</dt><dd class="${nogerb===S.colis.length?'warn':''}">${nf(nogerb)}<small> / ${S.colis.length}</small></dd></div>`;
+
+  const t=b.totaux_document; let rec="";
+  if(t){
+    const ok = Object.values(t).every(x=>x.ecart_pct<0.5);
+    rec = `<p class="notice ${ok?'good':'bad'}"><b>Réconciliation avec la ligne TOTAL du document.</b> `
+      + Object.entries(t).map(([k,v])=>`${k} : document ${nf(v.document,k==="volume"?1:0)} / calculé ${nf(v.calcule,k==="volume"?1:0)} — écart ${v.ecart_pct} %`).join(" · ")
+      + (ok? " La lecture est fidèle." : " Écart significatif : vérifie le mapping ou la ligne d'en-tête.")+"</p>";
+  } else {
+    rec = `<p class="notice warn">Aucune ligne TOTAL détectée — impossible de vérifier automatiquement
+      que rien n'a été perdu à la lecture. Contrôle les totaux à la main.</p>`;
+  }
+  if(b.lignes_ignorees) rec += `<p class="notice">${b.lignes_ignorees} ligne(s) sans cote exploitable ont été ignorées.</p>`;
+  $("#vRecon").innerHTML = rec;
+
+  const su=$("#vUnite");
+  if(!su.options.length){
+    S.unites.filter(u=>u.kind!=="special").forEach(u=>{
+      const o=document.createElement("option"); o.value=u.cle; o.textContent=u.label; su.appendChild(o); });
+    su.value=S.uniteRef;
+    su.onchange=async()=>{ S.uniteRef=su.value; await reclasser(); dessinerVerif(); };
+  }
+  lignesVerif();
+}
+function passeFiltre(c){
+  const al=S.alertes[c.id]||[], g=S.gabarit[c.id]||{};
+  const q=$("#vRech").value.trim().toLowerCase();
+  if(q && !((c.ref+" "+c.desc).toLowerCase().includes(q))) return false;
+  switch(S.filtre){
+    case "err":    return al.some(a=>a.niveau==="err");
+    case "warn":   return al.some(a=>a.niveau==="warn");
+    case "hg":     return g.verdict==="hors_gabarit";
+    case "lim":    return g.verdict==="limite";
+    case "nogerb": return c.stackable==="no";
+    default: return true;
+  }
+}
+function lignesVerif(){
+  const tb=$("#vBody"); tb.innerHTML="";
+  const vus=S.colis.filter(passeFiltre);
+  for(const c of vus){
+    const al=S.alertes[c.id]||[], g=S.gabarit[c.id]||{verdict:"ok",marge:0};
+    const tag = g.verdict==="hors_gabarit" ? '<span class="tag t-hg">hors gabarit</span>'
+            : g.verdict==="limite" ? `<span class="tag t-lim">limite ${nf(g.marge)} cm</span>`
+            : `<span class="tag t-ok">ok ${nf(g.marge)} cm</span>`;
+    const tr=document.createElement("tr");
+    tr.dataset.id=c.id; if(S.sel.has(c.id)) tr.className="sel";
+    tr.innerHTML = `
+      <td><input type="checkbox" class="pick" ${S.sel.has(c.id)?"checked":""} aria-label="Sélectionner ${esc(c.ref)}"></td>
+      <td class="mono">${esc(c.ref)}${c.lignes_source>1?` <span class="tag t-info">${c.lignes_source} lignes</span>`:""}</td>
+      <td class="wrap" title="${esc(c.desc)}">${esc(c.desc.slice(0,90))}</td>
+      <td class="n"><input type="number" data-f="length" value="${c.length}" step="0.1"></td>
+      <td class="n"><input type="number" data-f="width"  value="${c.width}"  step="0.1"></td>
+      <td class="n"><input type="number" data-f="height" value="${c.height}" step="0.1"></td>
+      <td class="n"><input type="number" data-f="gross"  value="${c.gross}"  step="1"></td>
+      <td class="n">${nf(c.length*c.width*c.height/1e6,2)}</td>
+      <td><select data-f="stackable">
+            <option value="no"   ${c.stackable==="no"?"selected":""}>non</option>
+            <option value="same" ${c.stackable==="same"?"selected":""}>sur identique</option>
+            <option value="yes"  ${c.stackable==="yes"?"selected":""}>oui</option></select></td>
+      <td class="n"><input type="number" data-f="max_load" value="${c.max_load??""}" step="100" placeholder="—"></td>
+      <td><input type="checkbox" data-f="rotatable" ${c.rotatable?"checked":""} aria-label="Rotation autorisée"></td>
+      <td><input type="checkbox" data-f="bottom_only" ${c.bottom_only?"checked":""} aria-label="Doit rester au sol"></td>
+      <td><select data-f="status">
+            <option value="confirmed" ${c.status==="confirmed"?"selected":""}>confirmé</option>
+            <option value="estimated" ${c.status==="estimated"?"selected":""}>estimé</option></select></td>
+      <td>${tag}</td>
+      <td class="wrap">${al.map(a=>`<span class="al ${a.niveau}">${esc(a.texte)}</span>`).join("")
+                       + (g.motifs||[]).map(m=>`<span class="al warn">${esc(m)}</span>`).join("")}</td>`;
+    tb.appendChild(tr);
+  }
+  if(!vus.length) tb.innerHTML = '<tr><td colspan="15" style="padding:26px;color:var(--ink-3)">Aucun colis ne correspond à ce filtre.</td></tr>';
+  majBulk();
+  $("#vBlocage").textContent = S.bilan.erreurs ? `${S.bilan.erreurs} erreur(s) de cohérence — corrige-les avant de t'engager sur un chiffre.` : "";
+}
+$("#vBody").addEventListener("input", async e=>{
+  const tr=e.target.closest("tr"); if(!tr) return;
+  const c=S.colis.find(x=>x.id==tr.dataset.id); if(!c) return;
+  const t=e.target;
+  if(t.classList.contains("pick")){
+    t.checked ? S.sel.add(c.id) : S.sel.delete(c.id);
+    tr.classList.toggle("sel", t.checked); majBulk(); return;
+  }
+  const f=t.dataset.f; if(!f) return;
+  if(t.type==="checkbox") c[f]=t.checked;
+  else if(t.type==="number") c[f] = t.value===""? (f==="max_load"?null:0) : +t.value;
+  else c[f]=t.value;
+  clearTimeout(window._rc);
+  window._rc = setTimeout(recontroler, 420);
+});
+async function recontroler(){
+  const totaux = S.bilan.totaux_document, ign=S.bilan.lignes_ignorees, rat=S.bilan.lignes_rattachees;
+  const d = await api("/api/controler", {colis:S.colis});
+  S.alertes = d.alertes;
+  S.bilan = Object.assign(d.bilan, {totaux_document:totaux, lignes_ignorees:ign, lignes_rattachees:rat});
+  await reclasser(); dessinerVerif();
+}
+function majBulk(){
+  $("#vBulk").hidden = S.sel.size===0;
+  $("#vNsel").textContent = S.sel.size;
+  const vus=S.colis.filter(passeFiltre);
+  $("#vAll").checked = vus.length>0 && vus.every(c=>S.sel.has(c.id));
+}
+$("#vAll").onchange = e=>{
+  S.colis.filter(passeFiltre).forEach(c=> e.target.checked ? S.sel.add(c.id) : S.sel.delete(c.id));
+  lignesVerif();
+};
+$("#bVider").onclick = ()=>{ S.sel.clear(); lignesVerif(); };
+$("#bAppliquer").onclick = async ()=>{
+  const g=$("#bGerb").value, l=$("#bLoad").value, r=$("#bRot").value, st=$("#bStat").value;
+  let n=0;
+  S.colis.forEach(c=>{ if(!S.sel.has(c.id)) return; n++;
+    if(g) c.stackable=g;
+    if(l!=="") c.max_load=+l;
+    if(r!=="") c.rotatable = r==="1";
+    if(st) c.status=st; });
+  await reclasser(); dessinerVerif(); toast(n+" colis mis à jour");
+};
+$("#filtres").addEventListener("click", e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  S.filtre=b.dataset.fil;
+  $$("#filtres button").forEach(x=>x.setAttribute("aria-pressed", x===b));
+  lignesVerif();
+});
+$("#vRech").oninput = lignesVerif;
+$("#btnExpColis").onclick = ()=>telecharger("/api/export/colis", corpsPlan());
+
+/* ═══════════ 4 · plan ═══════════ */
+function corpsPlan(avecPlan){
+  const c = {colis:S.colis, unites:S.unitesPlan, plafond:+$("#pPlafond").value,
+             clearance:+$("#pCalage").value, limite_cm:+$("#pLimite").value,
+             grouper_par:$("#pGroupe").value||null, optimiser_unite:$("#pOpt").checked};
+  if(avecPlan && S.modifie) c.plan = S.plan;
+  return c;
+}
+$("#btnPlan").onclick = ()=>{ debloquer(4); etape(4); calculer(); };
+$("#btnRecalc").onclick = calculer;
+
+async function calculer(){
+  const btn=$("#btnRecalc"); btn.disabled=true; btn.innerHTML='<span class="spin"></span>Calcul…';
+  try{
+    S.plan = await api("/api/plan", corpsPlan());
+    S.planOrigine = JSON.parse(JSON.stringify(S.plan));
+    S.modifie=false; S.uActive=0; dessinerPlan();
+  }catch(err){ toast("Calcul impossible : "+err.message, 5000); }
+  btn.disabled=false; btn.textContent="Recalculer";
+}
+
+function dessinerPlan(){
+  const p=S.plan, r=p.resume;
+  $("#pStats").innerHTML = `
+    <div><dt>Unités de transport</dt><dd>${nf(r.nb_unites)}</dd></div>
+    <div><dt>Remplissage moyen</dt><dd>${nf(r.remplissage_moyen,1)} <small>%</small></dd></div>
+    <div><dt>Colis placés</dt><dd>${nf(r.colis_standard)}<small> / ${nf(r.colis_total)}</small></dd></div>
+    <div><dt>Hors gabarit</dt><dd class="${r.colis_hors_gabarit?'bad':'good'}">${nf(r.colis_hors_gabarit)}</dd></div>
+    <div><dt>Colis limites</dt><dd class="${r.colis_limite?'warn':''}">${nf(r.colis_limite)}</dd></div>
+    <div><dt>Volume conteneurisé</dt><dd>${nf(r.volume_standard,1)} <small>m³</small></dd></div>
+    <div><dt>Détail</dt><dd style="font-size:14px;font-weight:500;line-height:1.5">${Object.entries(r.detail_unites).map(([k,v])=>v+" × "+k).join("<br>")||"—"}</dd></div>`;
+
+  let notes="";
+  if(r.colis_refuses) notes += `<p class="notice bad">${r.colis_refuses} colis n'entre(nt) dans aucune unité même seul(s) — vérifie ses cotes.</p>`;
+  if(!S.colis.some(c=>c.stackable!=="no"))
+    notes += `<p class="notice warn"><b>Aucun colis n'est déclaré gerbable.</b> Le plan ci-dessous est le
+      pire cas : rien n'est empilé. Renseigne la gerbabilité à l'étape 3 — c'est le réglage qui change
+      le plus le nombre d'unités.</p>`;
+  if($("#pGroupe").value==="") notes += `<p class="notice">Calcul en lot unique : c'est l'optimum théorique.
+      Passe sur « n° d'expédition » pour obtenir le nombre réellement expédiable.</p>`;
+  if(S.modifie) notes += `<p class="notice warn"><b>Plan modifié à la main.</b> Les positions déplacées
+      sont conservées dans l'export. « Recalculer » les écrasera.</p>`;
+  $("#pNotes").innerHTML = notes;
+
+  const list=$("#pList"); list.innerHTML="";
+  p.unites.forEach((u,i)=>{
+    const b=document.createElement("button"); b.type="button";
+    b.setAttribute("aria-current", i===S.uActive);
+    b.innerHTML = `<span class="l1"><span>Unité ${i+1} · ${esc(u.unite_label)}</span><span>${nf(u.remplissage,1)} %</span></span>
+      <span class="l2">${u.colis.length} colis · ${nf(u.poids)} / ${nf(u.charge_utile)} kg${u.groupe!=="tout"?" · lot "+esc(u.groupe):""}</span>
+      <span class="meter" style="margin-top:8px"><span class="tr"><span class="fl" style="width:${Math.min(u.remplissage,100)}%"></span></span></span>`;
+    b.onclick=()=>{ S.uActive=i; dessinerPlan(); };
+    list.appendChild(b);
+  });
+  if(!p.unites.length) list.innerHTML='<div style="padding:20px;color:var(--ink-3)">Aucune unité — tous les colis sont hors gabarit.</div>';
+
+  const hg=p.hors_gabarit;
+  $("#hgTitre").hidden = $("#hgWrap").hidden = !hg.length;
+  $("#hgBody").innerHTML = hg.map(h=>`<tr>
+      <td class="mono">${esc(h.ref)}</td><td class="wrap">${esc(h.desc)}</td>
+      <td class="n">${nf(h.dims[0])} × ${nf(h.dims[1])} × ${nf(h.dims[2])}</td>
+      <td class="n">${nf(h.kg)}</td><td class="n">${nf(h.volume,1)}</td>
+      <td class="wrap">${(h.motifs||[]).map(esc).join("<br>")||esc(h.motif)}</td>
+      <td>${esc(h.solution)}</td></tr>`).join("");
+
+  chargerUnite();
+}
+
+/* ═══════════ vue 3D ═══════════ */
+let viewer = null;
+const RAMPE = [[0.42,0.68,0.75],[0.30,0.58,0.67],[0.55,0.75,0.78],[0.24,0.48,0.57],
+               [0.63,0.80,0.82],[0.35,0.62,0.70],[0.48,0.72,0.77],[0.28,0.54,0.63]];
+
+function couleurs(n){
+  return Array.from({length:n}, (_,i)=>{
+    const t = n===1 ? .5 : i/(n-1);
+    const a = RAMPE[i % RAMPE.length];
+    return [a[0]*(1-.16*t)+.05, a[1]*(1-.14*t)+.04, a[2]*(1-.10*t)+.03];
+  });
+}
+
+function chargerUnite(){
+  const u=S.plan?.unites[S.uActive];
+  if(!u){ $("#pDetail").innerHTML=""; return; }
+  if(!viewer){
+    viewer = creerViewer($("#cv"), {
+      onSelect: majSelection,
+      onMove: (i, invalide)=>{
+        if(invalide){ toast("Position impossible : chevauchement ou appui insuffisant", 3000); }
+        else { commitPositions(); toast("Colis déplacé"); }
+        majSelection(viewer.selection());
+      },
+      onHover: (id, x, y)=>{
+        const t=$("#tip"), uu=S.plan.unites[S.uActive];
+        if(id<0 || !uu.colis[id]){ t.style.opacity=0; return; }
+        const c=uu.colis[id];
+        t.innerHTML = `<b>${esc(c.ref)}</b> — ${esc(c.desc)}<br>${nf(c.l)} × ${nf(c.w)} × ${nf(c.h)} cm · ${nf(c.kg)} kg`;
+        t.style.opacity=1; t.style.left=(x+16)+"px"; t.style.top=(y+16)+"px";
+      },
+    });
+    if(!viewer) return;
+  }
+  viewer.definir(u.dims, u.colis.map(c=>({x:c.x,y:c.y,z:c.z,l:c.l,w:c.w,h:c.h})), couleurs(u.colis.length));
+  viewer.cadrer();
+  viewer.editable($("#chkEdit").checked);
+  $("#vfR").max=u.colis.length; $("#vfR").value=u.colis.length;
+  majSelection(-1); majPied(u.colis.length); tableDetail();
+}
+
+function tableDetail(){
+  const u=S.plan.unites[S.uActive];
+  $("#pDetail").innerHTML = u.colis.map((c,i)=>`<tr data-i="${i}">
+      <td class="n">${i+1}</td><td class="mono">${esc(c.ref)}</td><td class="wrap">${esc(c.desc)}</td>
+      <td class="n">${nf(c.l)}×${nf(c.w)}×${nf(c.h)}</td>
+      <td class="n">${nf(c.x)}, ${nf(c.y)}, ${nf(c.z)}</td>
+      <td class="n">${nf(c.kg)}</td><td class="n">${c.charge_dessus?nf(c.charge_dessus):"—"}</td></tr>`).join("");
+}
+$("#pDetail").addEventListener("click", e=>{
+  const tr=e.target.closest("tr"); if(!tr || !viewer) return;
+  viewer.selectionner(+tr.dataset.i); majSelection(+tr.dataset.i);
+});
+
+function commitPositions(){
+  // Mise à jour ciblée : surtout pas dessinerPlan(), qui reconstruirait la scène,
+  // recadrerait la caméra et ferait perdre la sélection en cours d'édition.
+  const u=S.plan.unites[S.uActive], b=viewer.boites();
+  u.colis.forEach((c,i)=>{ c.x=b[i].x; c.y=b[i].y; c.z=b[i].z; c.l=b[i].l; c.w=b[i].w; c.h=b[i].h; });
+  const premier = !S.modifie;
+  S.modifie=true; $("#btnReset").hidden=false;
+  tableDetail(); majPied(+$("#vfR").value);
+  if(premier) $("#pNotes").insertAdjacentHTML("beforeend",
+    `<p class="notice warn" id="noteModif"><b>Plan modifié à la main.</b> Les positions déplacées sont
+     conservées dans l'export. « Recalculer » les écrasera.</p>`);
+}
+
+function majSelection(i){
+  const u=S.plan?.unites[S.uActive];
+  const pan=$("#selPan");
+  $$("#pDetail tr").forEach(tr=>tr.classList.toggle("actif", +tr.dataset.i===i));
+  if(i<0 || !u || !u.colis[i]){ pan.hidden=true; return; }
+  const c=u.colis[i], b=viewer.boites()[i];
+  pan.hidden=false;
+  $("#selNom").textContent = c.ref+" — "+c.desc.slice(0,52);
+  $("#selDet").textContent = `${nf(b.l)} × ${nf(b.w)} × ${nf(b.h)} cm · ${nf(c.kg)} kg · position ${nf(b.x)}, ${nf(b.y)}, ${nf(b.z)}`;
+  const o = S.planOrigine?.unites?.[S.uActive]?.colis?.[i];
+  const bouge = o && (Math.abs(b.x-o.x)>0.5 || Math.abs(b.y-o.y)>0.5 || Math.abs(b.l-o.l)>0.5);
+  $("#selEtat").textContent = bouge ? "⬤ déplacé par rapport au calcul" : "";
+}
+
+function majPied(n){
+  const u=S.plan.unites[S.uActive], [L,W,H]=u.dims;
+  const b=viewer ? viewer.boites() : u.colis;
+  let v=0; for(let i=0;i<Math.min(n,b.length);i++) v += b[i].l*b[i].w*b[i].h/1e6;
+  const cap=L*W*H/1e6;
+  $("#vf1").innerHTML = `<b>${esc(u.unite_label)}</b> · ${(L/100).toFixed(2)} × ${(W/100).toFixed(2)} × ${(H/100).toFixed(2)} m`;
+  $("#vf2").innerHTML = `Remplissage <b>${nf(v/cap*100,1)} %</b> · ${nf(v,1)} / ${nf(cap,1)} m³ · <b>${nf(u.poids)} kg</b>`;
+  $("#vf3").innerHTML = `Colis <b>${Math.min(n,b.length)}</b> / ${b.length}`;
+}
+
+$("#vfR").oninput = ()=>{ if(!viewer) return; viewer.visibles(+$("#vfR").value); majPied(+$("#vfR").value); };
+$("#vues").addEventListener("click", e=>{
+  const b=e.target.closest("button"); if(!b||!viewer) return;
+  $$("#vues button").forEach(x=>x.setAttribute("aria-pressed", x===b));
+  viewer.vue(b.dataset.v);
+});
+$("#btnCadrer").onclick = ()=>viewer && viewer.cadrer();
+$("#chkEdit").onchange = e=>{
+  $("#aideEdit").hidden = !e.target.checked;
+  if(viewer) viewer.editable(e.target.checked);
+  if(!e.target.checked) majSelection(-1);
+};
+$("#btnPivoter").onclick = ()=>{
+  if(!viewer) return;
+  const i=viewer.selection(); if(i<0) return;
+  if(viewer.pivoter(i)) { commitPositions(); majSelection(i); }
+  else toast("Rotation impossible à cette position", 2600);
+};
+$("#btnReset").onclick = ()=>{
+  S.plan = JSON.parse(JSON.stringify(S.planOrigine));
+  S.modifie=false; $("#btnReset").hidden=true; dessinerPlan(); toast("Plan d'origine rétabli");
+};
+addEventListener("keydown", e=>{
+  if(!viewer || $("#e4").hidden || !$("#chkEdit").checked) return;
+  if(/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName)) return;
+  const i=viewer.selection();
+  if(e.key==="Escape"){ viewer.selectionner(-1); majSelection(-1); return; }
+  if(i<0) return;
+  const pas = e.shiftKey ? 10 : 1;
+  const d = {ArrowLeft:[-pas,0], ArrowRight:[pas,0], ArrowUp:[0,-pas], ArrowDown:[0,pas]}[e.key];
+  if(d){ e.preventDefault(); if(viewer.deplacer(i,d[0],d[1])){ commitPositions(); majSelection(i); } }
+  else if(e.key==="r"||e.key==="R"){
+    e.preventDefault();
+    if(viewer.pivoter(i)){ commitPositions(); majSelection(i); } else toast("Rotation impossible ici",2200);
+  }
+});
+addEventListener("resize", ()=>viewer && viewer.rendu());
+$("#cv").addEventListener("pointerleave", ()=>$("#tip").style.opacity=0);
+
+$("#btnExpPlan").onclick = ()=>telecharger("/api/export/plan", corpsPlan(true));
+async function telecharger(url, body){
+  const r = await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+  if(!r.ok){ toast("Export impossible"); return; }
+  const blob=await r.blob(), a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=(r.headers.get("Content-Disposition")||"").match(/filename="(.+?)"/)?.[1] || "export.csv";
+  a.click(); URL.revokeObjectURL(a.href); toast("Export téléchargé");
+}
+
+/* ═══════════ init ═══════════ */
+(async()=>{
+  const d = await (await fetch("/api/unites")).json();
+  S.unites=d.unites; S.champs=d.champs;
+  const box=$("#pUnites");
+  d.unites.forEach(u=>{
+    const b=document.createElement("button"); b.type="button"; b.className="ghost";
+    b.textContent=u.label; b.dataset.u=u.cle;
+    b.setAttribute("aria-pressed", u.cle==="40HC");
+    b.onclick=()=>{
+      b.setAttribute("aria-pressed", b.getAttribute("aria-pressed")!=="true");
+      S.unitesPlan=[...box.querySelectorAll('[aria-pressed=true]')].map(x=>x.dataset.u);
+      if(!S.unitesPlan.length){ b.setAttribute("aria-pressed",true); S.unitesPlan=[b.dataset.u]; }
+    };
+    box.appendChild(b);
+  });
+})();
+</script>
+</body>
+</html>
