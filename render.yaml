@@ -1,17 +1,20 @@
-# Déploiement en un clic sur https://render.com — « New + » → « Blueprint » → ce dépôt.
+# Déploiement en un clic : https://render.com → « New + » → « Blueprint » → ce dépôt.
 services:
   - type: web
     name: tpitool
     runtime: python
     plan: free
-    region: frankfurt
+    region: frankfurt          # oregon / ohio / virginia / singapore possibles
+    branch: main
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    # Render fournit $PORT (10000 par défaut) ; la valeur de repli permet de
+    # lancer la même commande ailleurs sans rien changer.
+    startCommand: uvicorn app:app --host 0.0.0.0 --port ${PORT:-10000}
     healthCheckPath: /api/unites
     envVars:
       - key: PYTHON_VERSION
         value: "3.12.6"
-      # Protège le lien par un mot de passe : Render en génère un et l'affiche
-      # dans l'onglet Environment du service.
+      # Mot de passe d'accès généré par Render : visible dans l'onglet
+      # Environment du service. Sans lui, n'importe qui peut déposer des fichiers.
       - key: TPITOOL_MDP
         generateValue: true
