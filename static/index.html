@@ -747,6 +747,12 @@ function dessinerPlan(){
       le plus le nombre d'unités.</p>`;
   if($("#pGroupe").value==="") notes += `<p class="notice">Calcul en lot unique : c'est l'optimum théorique.
       Passe sur « n° d'expédition » pour obtenir le nombre réellement expédiable.</p>`;
+  const routier = S.unites.filter(u=>u.kind==="camion" && S.unitesPlan.includes(u.cle)).map(u=>u.label);
+  if(routier.length) notes += `<p class="notice warn"><b>Chargement routier : la répartition à
+      l'essieu n'est pas calculée.</b> Sur ${esc(routier.join(", "))}, la contrainte qui dimensionne
+      réellement le chargement n'est pas le volume mais la charge par essieu. Le plan ci-dessous
+      respecte le volume et la charge utile totale — il doit être revu par un exploitant avant
+      d'engager un camion.</p>`;
   if(S.modifie) notes += `<p class="notice warn"><b>Plan modifié à la main.</b> Les positions déplacées
       sont conservées dans l'export. « Recalculer » les écrasera.</p>`;
   $("#pNotes").innerHTML = notes;
